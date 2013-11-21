@@ -1,9 +1,12 @@
 #!/usr/bin/python
-import os
+from os import *
 import sys
 import subprocess
 
 ## Here are some utility functions ##
+
+def error(msg):
+  raise Exception(msg)
 
 def sh(command):
   return subprocess.call(command.split(" "))
@@ -12,15 +15,15 @@ def prefix(name):
   return "--prefix=%s/" % name
 
 def remotes():
-  [f for f in listdir(".git/refs/remotes/") if not isfile(".git/refs/remotes/%s" % f)]
+  return [f for f in listdir(".git/refs/remotes/") if not path.isfile(".git/refs/remotes/%s" % f)]
 
 def assert_remote_exists(name):
   if not name in remotes():
-    raise "remote %s does not exist" % name
+    error("remote %s does not exist" % name)
 
 def assert_remote_does_not_exist(name):
   if name in remotes():
-    raise "remote %s already exists" % name
+    error("remote %s already exists" % name)
 
 def sub_branch_exists(name, sub_branch):
   pass
@@ -42,12 +45,12 @@ def remove_project(name):
   print "ia remove project %s" % (name)
   assert_remote_exists(name)
   sh("git remote rm %s" % name)
+  sh("rm -r .git/refs/remotes/%s" % name)
 
 def add_subtree(name_and_branch):
   print "ia add subtree %s" % name_and_branch
   [name, branch] = name_and_branch.split("/")
   assert_remote_exists(name)
-  assert_sub_
 
 def remove_subtree(name):
   print "ia remove subtree %s" % name
@@ -67,28 +70,31 @@ commands = {
 
 ## Here is the processor ##
 
-subcommand = commands
-index = 1
-#  Invariant: subcommand is a dictionary AND there exist more arguments
-while type(subcommand) is dict and index < len(sys.argv):
-  subcommand = subcommand[sys.argv[index]]
-  index += 1
-# ~Invariant: subcommand is not a dictionary OR there exist no more arguments
+try:
+  subcommand = commands
+  index = 1
+  #  Invariant: subcommand is a dictionary AND there exist more arguments
+  while type(subcommand) is dict and index < len(sys.argv):
+    subcommand = subcommand[sys.argv[index]]
+    index += 1
+  # ~Invariant: subcommand is not a dictionary OR there exist no more arguments
 
-if type(subcommand) is dict and index == len(sys.argv):
-  # subcommand is a dictionary -> command is incomplete
-  def pprint(item, indent="  "):
-    if type(item) is dict:
-      for key, value in item.iteritems():
-        if type(value) is dict:
-          print "%s%s:\n" % (indent, key)
-          pprint(value, indent="  %s" % indent)
-        else:
-          print"%s%s\n" % (indent, key)
+  if type(subcommand) is dict and index == len(sys.argv):
+    # subcommand is a dictionary -> command is incomplete
+    def pprint(item, indent="  "):
+      if type(item) is dict:
+        for key, value in item.iteritems():
+          if type(value) is dict:
+            print "%s%s:\n" % (indent, key)
+            pprint(value, indent="  %s" % indent)
+          else:
+            print"%s%s\n" % (indent, key)
 
-  print "Usage:"
-  print " ".join(sys.argv[1:])
-  pprint(subcommand)
-else:
-  # subcommand is not a dictionary -> command is complete
-  subcommand(*sys.argv[index:])  
+    print "Usage:"
+    print " ".join(sys.argv[1:])
+    pprint(subcommand)
+  else:
+    # subcommand is not a dictionary -> command is complete
+    subcommand(*sys.argv[index:])  
+except Exception as e:
+  print "Error: %s" % e
