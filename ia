@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from os import *
+from os import listdir, path
 import sys
 import subprocess
 
@@ -28,25 +28,36 @@ def assert_remote_does_not_exist(name):
     error("remote %s already exists" % name)
 
 # sub_branches
+def current_branch():
+  return open(".git/HEAD").read().strip().split("/")[-1]
+
 def sub_branches():
-  return [f for f in listdir(".git/refs/heads/") if f.startswith("ia_")
+  return [f for f in listdir(".git/refs/heads/") if f.startswith("ia_")]
 
 def sub_branch_exists(name, sub_branch):
   "%s_%s" % (name, sub_branch) in sub_branches()
 
 def assert_sub_branch_exists(name, sub_branch):
-  if not sub_branch_exists(name, sub_branch)
+  if not sub_branch_exists(name, sub_branch):
     error("branch %s_%s does not exist" % (name, sub_branch))
 
 def assert_sub_branch_does_not_exist(name, sub_branch):
-  if sub_branch_exists(name, sub_branch)
+  if sub_branch_exists(name, sub_branch):
     error("branch %s_%s already exists" % (name, sub_branch))
 
 def create_or_update_sub_branch(name, sub_branch):
+  branch = current_branch()
+  print "he"
   if sub_branch_exists(name, sub_branch):
-    pass
+    sh("git checkout ia_%s_%s %s/%s" % (name, sub_branch, name, sub_branch))
+    sh("git pull")
   else:
     sh("git checkout -b ia_%s_%s %s/%s" % (name, sub_branch, name, sub_branch))
+  sh("git checkout %s" % branch)
+
+def remove_sub_branch(name, sub_branch):
+  assert_sub_branch_exists(name, sub_branch)
+  sh("git branch -D ia_%s_%s" % (name, sub_branch))
 
 ## Here are the handlers ##
 
@@ -65,7 +76,11 @@ def add_subtree(name_and_branch):
   print "ia add subtree %s" % name_and_branch
   [name, branch] = name_and_branch.split("/")
   assert_remote_exists(name)
-  )
+  print name
+  print branch
+  create_or_update_sub_branch(name, branch)
+  print "here"
+  sh("git read-tree --prefix=%s -u ia_%s_%s" % (name, name, branch))
 
 def remove_subtree(name):
   print "ia remove subtree %s" % name
