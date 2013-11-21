@@ -47,7 +47,6 @@ def assert_sub_branch_does_not_exist(name, sub_branch):
 
 def create_or_update_sub_branch(name, sub_branch):
   branch = current_branch()
-  print "he"
   if sub_branch_exists(name, sub_branch):
     sh("git checkout ia_%s_%s %s/%s" % (name, sub_branch, name, sub_branch))
     sh("git pull")
@@ -84,7 +83,7 @@ def add_subtree(name_and_branch):
 
 def remove_subtree(name):
   print "ia remove subtree %s" % name
-  
+  sh("rm -r %s" % name)
   
 
 ## Here are the handler routes ##
