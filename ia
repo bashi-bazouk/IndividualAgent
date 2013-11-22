@@ -1,19 +1,30 @@
 #!/usr/bin/python
-from os import listdir, path
+from os import listdir, path, stat
 import sys
 import subprocess
 
 ## Here are some utility functions ##
 
 # general
-def error(msg):
-  raise Exception(msg)
+class IAException(Exception):
+  pass
 
-def sh(command):
-  return subprocess.call(command.split(" "))
+def error(msg):
+  raise IAException(msg)
+
+def sh(command, **kwargs):
+  return subprocess.call(command.split(" "), **kwargs)
 
 def prefix(name):
   return "--prefix=%s/" % name
+
+def assert_clean():
+  tmp = "/tmp/check_git"
+  with open(tmp, 'w+') as stdout:
+    sh("git diff --exit-code", stdout=stdout)
+    if stat(tmp)[6] != 0:
+      # file is non-empty -> changes need to be committed
+      error("Commit files before using this command.")
 
 # remotes
 def remotes():
@@ -58,11 +69,32 @@ def remove_sub_branch(name, sub_branch):
   assert_sub_branch_exists(name, sub_branch)
   sh("git branch -D ia_%s_%s" % (name, sub_branch))
 
+# subtrees
+
+def assert_subtree_exists(name):
+  if not path.exists(name):
+    error("subtree %s does not exist" % name)
+
+def assert_subtree_does_not_exist(name):
+  if path.exists(name):
+    error("subtree %s already exists" % name)
+
+def sub_branches_of_subtree(name):
+  return [f for f in sub_branches() if f.startswith("ia_%s" % name)]
+
+def map_sub_branch_of_subtree(name, clv):
+  sub_branches = sub_branches_of_subtree(name)
+  if clv is None and len(sub_branches) is 1:
+    sub_branches[0]
+  else:
+    clv
+
 ## Here are the handlers ##
 
 def add_project(name, url):
   print "ia add project %s %s" % (name, url)
   assert_remote_does_not_exist(name)
+  assert_clean()
   sh("git remote add -f %s %s" % (name, url))
 
 def remove_project(name):
@@ -70,21 +102,42 @@ def remove_project(name):
   assert_remote_exists(name)
   sh("git remote rm %s" % name)
   sh("rm -r .git/refs/remotes/%s" % name)
+  if path.exists(name):
+    sh("rm -r %s" % name)
 
-def add_subtree(name_and_branch):
-  print "ia add subtree %s" % name_and_branch
-  [name, branch] = name_and_branch.split("/")
+def add_subtree(name, sub_branch="master"):
+  print "ia add subtree %s %s" % (name, sub_branch)
   assert_remote_exists(name)
-  print name
-  print branch
-  create_or_update_sub_branch(name, branch)
-  print "here"
-  sh("git read-tree --prefix=%s -u ia_%s_%s" % (name, name, branch))
+  assert_clean()
+  # assert_subtree_does_not_exist(name)
+  create_or_update_sub_branch(name, sub_branch)
+  sh("git read-tree --prefix=%s -u ia_%s_%s" % (name, name, sub_branch))
 
 def remove_subtree(name):
   print "ia remove subtree %s" % name
   sh("rm -r %s" % name)
-  
+
+def pull_subtree(name, sub_branch=None):
+  print "ia pull subtree %s" % name
+  assert_clean()
+  assert_subtree_exists(name)
+  sub_branch = map_subranch_of_subtree(name, sub_branch)
+  if sub_branch is None:
+    print "Usage: ia pull subtree %s <sub_branch>" % name
+  else:
+    create_or_update_sub_branch(name, sub_branch)
+    command = "git merge --squash -s subtree --no-commit ia_%s_%s"
+    sh(command % (name, name, sub_branch))
+
+def push_subtree(name, sub_branch=None):
+  print "ia push subtree %name" % name    
+  assert_clean()
+  assert_subtree_exists(name)
+  sub_branch = map_subranch_of_subtree(name, sub_branch)
+  if sub_branch is None:
+    print  "Usage: ia push subtree %s <sub_branch>" % name
+  else:
+    pass
 
 ## Here are the handler routes ##
 
@@ -125,5 +178,6 @@ try:
   else:
     # subcommand is not a dictionary -> command is complete
     subcommand(*sys.argv[index:])  
-except Exception as e:
+except IAException as e:
   print "Error: %s" % e
+  print e.args
