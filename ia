@@ -103,8 +103,7 @@ def remove_project(name):
   sh("rm -r .git/refs/remotes/%s" % name)
   for b in sub_branches_of_subtree(name):
     sh("git branch -D %s" % b)
-  if path.exists(name):
-    sh("rm -r %s" % name)
+  remove_subtree(name)
 
 def add_subtree(name, sub_branch="master"):
   print "ia add subtree %s %s" % (name, sub_branch)
@@ -116,8 +115,9 @@ def add_subtree(name, sub_branch="master"):
 
 def remove_subtree(name):
   print "ia remove subtree %s" % name
-  sh("rm -r %s" % name)
-  sh("git rm -r %s" % name)
+  if path.exists(name):
+    sh("rm -r %s" % name)
+    sh("git rm -r %s" % name)
      
 def pull_subtree(name, sub_branch=None):
   print "ia pull subtree %s" % name
