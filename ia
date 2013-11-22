@@ -94,7 +94,6 @@ def map_sub_branch_of_subtree(name, clv):
 def add_project(name, url):
   print "ia add project %s %s" % (name, url)
   assert_remote_does_not_exist(name)
-  assert_clean()
   sh("git remote add -f %s %s" % (name, url))
 
 def remove_project(name):
@@ -102,6 +101,8 @@ def remove_project(name):
   assert_remote_exists(name)
   sh("git remote rm %s" % name)
   sh("rm -r .git/refs/remotes/%s" % name)
+  for b in sub_branches_of_subtree(name):
+    sh("git branch -D %s" % b)
   if path.exists(name):
     sh("rm -r %s" % name)
 
@@ -179,5 +180,4 @@ try:
     # subcommand is not a dictionary -> command is complete
     subcommand(*sys.argv[index:])  
 except IAException as e:
-  print "Error: %s" % e
-  print e.args
+  print "ERROR: %s" % e.args
