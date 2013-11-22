@@ -2,7 +2,7 @@
 
 IA=bin/ia
 
-workbench: ia
+workbench: bin/ia
 	$(IA) add project haxe_util https://github.com/iruffner/haxe.git
 	$(IA) add project specialk https://github.com/leithaus/SpecialK.git
 	$(IA) add project diesel https://github.com/rlamb/Agent-Service-ATI-IA.git
@@ -14,7 +14,7 @@ workbench: ia
 	$(IA) add subtree gloseval cryptoRedo
 	$(IA) add subtree agentui
 
-clean: ia
+clean: bin/ia
 	$(IA) remove project haxe_util
 	$(IA) remove project specialk
 	$(IA) remove project diesel
@@ -22,12 +22,12 @@ clean: ia
 	$(IA) remove project agentui
 
 
-make2: ia
+make2: bin/ia
 	$(IA) add project specialk https://github.com/leithaus/SpecialK.git
 	$(IA) add subtree specialk
 	$(IA) add project gloseval https://github.com/leithaus/GLoSEval.git
 	$(IA) add subtree gloseval
 
-remove2: ia
+remove2: bin/ia
 	$(IA) remove project specialk
 	$(IA) remove project gloseval
