@@ -117,7 +117,8 @@ def add_subtree(name, sub_branch="master"):
 def remove_subtree(name):
   print "ia remove subtree %s" % name
   sh("rm -r %s" % name)
-
+  sh("git rm -r %s" % name)
+     
 def pull_subtree(name, sub_branch=None):
   print "ia pull subtree %s" % name
   assert_clean()
