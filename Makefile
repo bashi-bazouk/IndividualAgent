@@ -20,9 +20,12 @@ clean: ia
 	./ia remove project agentui
 
 
-make1: ia
+make2: ia
 	./ia add project specialk https://github.com/leithaus/SpecialK.git
 	./ia add subtree specialk
+	./ia add project gloseval https://github.com/leithaus/GLoSEval.git
+	./ia add subtree gloseval
 
-remove1: ia
+remove2: ia
 	./ia remove project specialk
+	./ia remove project gloseval
