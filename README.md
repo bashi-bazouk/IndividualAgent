@@ -21,6 +21,20 @@ It is recommended to add the `bin` folder to your `PATH` when working with IAW.
 
 *  `make clean` - removes all (official) subprojects from the workbench.
 
+### IAW Dependencies
+*  Python
+
+### Official SubProject Dependencies
+*  Maven
+
+*  RabbitMQ
+
+*  MongoDB
+
+*  Scala
+
+*  JDK
+
 
 ###TODO
 *  `ia pull` and `ia push` need to be validated as working on a project (need commits)
@@ -28,3 +42,9 @@ It is recommended to add the `bin` folder to your `PATH` when working with IAW.
 *  Extend make clean to remove all subprojects.
 
 *  Automatically open pull requests from subproject branch to subproject repository.
+
+*  Make a front-page for the project.
+
+*  Make a wiki for the project.
+
+*  Make a .gitignore for the project.
