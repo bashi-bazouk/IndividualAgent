@@ -9,15 +9,15 @@ It is recommended to add the `bin` folder to your `PATH` when working with IAW.
 
 *  `ia add project <name> <git-repository>` - add any other repository as a subproject.
 
+*  `ia add subtree <name> <branch>` - add a project to the workbench.
+
 *  `ia pull subtree <name> <branch>` - download updates from a subproject repository
 
 *  `ia push subtree <name> <branch>` - push updates to a subproject branch
 
-*  `ia remove project <name>` - remove a subproject from the workbench (delete cache)
-
 *  `ia remove subtree <name>` - remove a project from the workbench (keep cache)
 
-*  `ia add subtree <name>` - restore a project to the workbench from cache.
+*  `ia remove project <name>` - remove a subproject from the workbench (delete cache)
 
 *  `make clean` - removes all (official) subprojects from the workbench.
 
