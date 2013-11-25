@@ -46,7 +46,7 @@ def sub_branches():
   return [f for f in listdir(".git/refs/heads/") if f.startswith("ia_")]
 
 def sub_branch_exists(name, sub_branch):
-  for b in sub_branches:
+  for b in sub_branches():
     print b
   "ia_%s_%s" % (name, sub_branch) in sub_branches()
 
