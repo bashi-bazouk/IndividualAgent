@@ -147,6 +147,7 @@ def push_subtree(name, sub_branch=None):
     print  "Usage: ia push subtree %s <sub_branch>" % name
   else:
     create_or_update_sub_branch(name, sub_branch)
+    sh("git subtree push --prefix %s/ %s %s" % (name, name, sub_branch))
 
 ## Here are the handler routes ##
 
