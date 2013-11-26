@@ -1,23 +1,11 @@
 #!/usr/bin/python
 from os import listdir, path, stat
 import sys
-import subprocess
+from iautil import *
 
 ## Here are some utility functions ##
 
 # general
-class IAException(Exception):
-  pass
-
-def error(msg):
-  raise IAException(msg)
-
-def sh(command, **kwargs):
-  return subprocess.call(command.split(" "), **kwargs)
-
-def prefix(name):
-  return "--prefix=%s/" % name
-
 def assert_clean():
   tmp = "/tmp/check_git"
   with open(tmp, 'w+') as stdout:
