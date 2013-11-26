@@ -92,9 +92,9 @@ def sub_branches_of_subtree(name):
 def map_sub_branch_of_subtree(name, clv):
   sub_branches = sub_branches_of_subtree(name)
   if clv is None and len(sub_branches) is 1:
-    sub_branches[0]
+    return sub_branches[0]
   else:
-    clv
+    return clv
 
 ## Here are the handlers ##
 
