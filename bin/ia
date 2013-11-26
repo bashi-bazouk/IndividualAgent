@@ -26,10 +26,10 @@ def assert_clean():
       # file is non-empty -> changes need to be committed
       error("Commit files before using this command.")
 
-def quick_push(*args):
+def quick_commit(*args):
   sh("git add -A")
   if len(args) is 0:
-    sh("""git commit -m "quickpush""")
+    sh("""git commit -m "quickcommit""")
   else:
     sh("git commit -m \"%s\"" % args.join(" "))
 
@@ -146,7 +146,7 @@ def push_subtree(name, sub_branch=None):
   if sub_branch is None:
     print  "Usage: ia push subtree %s <sub_branch>" % name
   else:
-    pass
+    
 
 ## Here are the handler routes ##
 
@@ -161,7 +161,7 @@ commands = {
     'subtree': pull_subtree },
   'push': {
     'subtree': push_subtree },
-  'qp': quick_push
+  'qc': quick_commit
 
 }
 
