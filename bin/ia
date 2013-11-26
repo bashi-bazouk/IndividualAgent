@@ -26,6 +26,13 @@ def assert_clean():
       # file is non-empty -> changes need to be committed
       error("Commit files before using this command.")
 
+def quick_push(*args):
+  sh("git add -A")
+  if len(args) is 0:
+    sh("""git commit -m "quickpush""")
+  else:
+    sh("git commit -m \"%s\"" % args.join(" "))
+
 # remotes
 def remotes():
   return [f for f in listdir(".git/refs/remotes/") if not path.isfile(".git/refs/remotes/%s" % f)]
@@ -123,7 +130,7 @@ def pull_subtree(name, sub_branch=None):
   print "ia pull subtree %s" % name
   assert_clean()
   assert_subtree_exists(name)
-  sub_branch = map_subranch_of_subtree(name, sub_branch)
+  sub_branch = map_sub_branch_of_subtree(name, sub_branch)
   if sub_branch is None:
     print "Usage: ia pull subtree %s <sub_branch>" % name
   else:
@@ -153,7 +160,9 @@ commands = {
   'pull': {
     'subtree': pull_subtree },
   'push': {
-    'subtree': push_subtree }
+    'subtree': push_subtree },
+  'qp': quick_push
+
 }
 
 ## Here is the processor ##
