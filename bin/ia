@@ -146,7 +146,7 @@ def push_subtree(name, sub_branch=None):
   if sub_branch is None:
     print  "Usage: ia push subtree %s <sub_branch>" % name
   else:
-    
+    pass
 
 ## Here are the handler routes ##
 
