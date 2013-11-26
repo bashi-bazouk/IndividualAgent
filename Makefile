@@ -1,4 +1,4 @@
-.PHONY: clean print
+.PHONY: clean workbench
 
 IA=bin/ia
 
@@ -8,11 +8,15 @@ workbench: bin/ia
 	$(IA) add project diesel https://github.com/rlamb/Agent-Service-ATI-IA.git
 	$(IA) add project gloseval https://github.com/leithaus/GLoSEval.git
 	$(IA) add project agentui https://github.com/iruffner/agentui.git
+	$(IA) add project zmq https://github.com/zeromq/libzmq.git
+	$(IA) add project mongrel2 https://github.com/bashi-bazouk/mongrel2.git
 	$(IA) add subtree haxe_util
 	$(IA) add subtree specialk
 	$(IA) add subtree diesel cryptoRedo
 	$(IA) add subtree gloseval cryptoRedo
 	$(IA) add subtree agentui
+	$(IA) add subtree zmq
+	$(IA) add subtree mongrel2
 
 clean: bin/ia
 	$(IA) remove project haxe_util
@@ -22,12 +26,16 @@ clean: bin/ia
 	$(IA) remove project agentui
 
 
-make2: bin/ia
-	$(IA) add project specialk https://github.com/leithaus/SpecialK.git
-	$(IA) add subtree specialk
-	$(IA) add project gloseval https://github.com/leithaus/GLoSEval.git
-	$(IA) add subtree gloseval
-
-remove2: bin/ia
-	$(IA) remove project specialk
-	$(IA) remove project gloseval
+install:
+	cd zmq
+	./autogen.sh
+	./configure
+	make
+	sudo make install
+	make clean
+	cd ..
+	cd mongrel2
+	make
+	sudo make install
+	make clean
+	cd ..
