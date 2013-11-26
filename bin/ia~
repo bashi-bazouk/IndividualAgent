@@ -132,7 +132,7 @@ def pull_subtree(name, sub_branch=None):
     sh(command % (name, name, sub_branch))
 
 def push_subtree(name, sub_branch=None):
-  print "ia push subtree %s" % name    
+  print "ia push subtree %name" % name    
   assert_clean()
   assert_subtree_exists(name)
   sub_branch = map_subranch_of_subtree(name, sub_branch)
@@ -149,11 +149,7 @@ commands = {
     'subtree': add_subtree },
   'remove': {
     'project': remove_project,
-    'subtree': remove_subtree },
-  'pull': {
-    'subtree': pull_subtree },
-  'push': {
-    'subtree': push_subtree }
+    'subtree': remove_subtree }
 }
 
 ## Here is the processor ##
