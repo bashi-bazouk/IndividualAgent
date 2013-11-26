@@ -142,7 +142,7 @@ def push_subtree(name, sub_branch=None):
   print "ia push subtree %s" % name    
   assert_clean()
   assert_subtree_exists(name)
-  sub_branch = map_subranch_of_subtree(name, sub_branch)
+  sub_branch = map_sub_branch_of_subtree(name, sub_branch)
   if sub_branch is None:
     print  "Usage: ia push subtree %s <sub_branch>" % name
   else:
