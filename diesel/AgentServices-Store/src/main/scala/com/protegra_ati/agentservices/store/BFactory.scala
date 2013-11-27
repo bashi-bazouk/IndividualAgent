@@ -72,6 +72,106 @@ package bfactory {
   import scala.collection.mutable.Buffer
   import scala.collection.mutable.ListBuffer
 
+  object BFactoryMirror {
+    @transient
+    lazy val ru = scala.reflect.runtime.universe
+    def instantiateBehavior(
+      behavior : String
+    ) : Either[( Any, ru.Mirror, ru.Type ), Throwable] = {
+      try {        
+        val m = ru.runtimeMirror( getClass.getClassLoader )
+        val clsSym = m.staticClass( behavior )
+        val cm = m.reflectClass( clsSym )
+        val clsTyp = clsSym.toType
+        val ctorDecl = clsTyp.declaration( ru.nme.CONSTRUCTOR )
+        val ctors = ctorDecl.asTerm.alternatives
+        ctors match {
+          case ctor :: rCtors => {
+            BasicLogService.tweet(
+              "method: commenceInstance"
+              + "\n instantiating instance "
+              + "\nthis: " + this
+              + "\n-----------------------------------------"
+              + "\nbehavior: " + behavior
+              + "\nctor: " + ctor
+            )
+            try {
+              val ctorm = cm.reflectConstructor( ctor.asMethod )
+              val instance = ctorm() //( cnxns, filters )
+              Left[( Any, ru.Mirror, ru.Type ), Throwable]( ( instance, m, clsTyp ) )
+            }
+            catch {
+              case e : Throwable => {
+                BasicLogService.tweet(
+                  "method: commenceInstance"
+                  + "\n failed instantiating instance when invoking ctor"
+                  + "\nthis: " + this
+                  + "\n-----------------------------------------"
+                  + "\nbehavior: " + behavior
+                  + "\nctor: " + ctor
+                )
+                
+                Right[( Any, ru.Mirror, ru.Type ), Throwable]( e )
+              }
+            }
+          }
+          case _ => {
+            BasicLogService.tweet(
+              "method: commenceInstance"
+              + "\n failed in attempt to instantiate instance "
+              + "\nthis: " + this
+              + "\n-----------------------------------------"
+              + "\nbehavior: " + behavior
+            )
+            Right[( Any, ru.Mirror, ru.Type ), Throwable]( new Exception( "no ctor alternatives: " + ctors ) )
+          }
+        }
+      }
+      catch {
+        case e : Throwable => {
+          Right[( Object, ru.Mirror, ru.Type ), Throwable]( e )
+        }
+      }
+    }
+
+    def instanceEntryPoint(
+      behavior : String,
+      entryPointMethodName : String
+    ) : Either[ru.MethodMirror, Throwable] = {
+      try {
+        instantiateBehavior( behavior ) match {
+          case Left( triple ) => {
+            val ( instance, m, clsTyp ) = triple
+            val instanceM = m.reflect( instance )
+            val instanceEntryPointS =
+              clsTyp.declaration(
+                ru.newTermName( entryPointMethodName )
+              ).asMethod
+            val instanceEntryPointM =
+              instanceM.reflectMethod( instanceEntryPointS )        
+            Left[ru.MethodMirror, Throwable]( instanceEntryPointM )
+          }
+          case Right( e ) => {
+            Right[ru.MethodMirror, Throwable]( e )
+          }
+        }       
+      }
+      catch {
+        case e : Throwable => {
+          BasicLogService.tweet(
+            "method: commenceInstance"
+            + "\n failed instantiating instance "
+            + "\nthis: " + this
+            + "\n-----------------------------------------"
+            + "\nbehavior: " + behavior
+          )
+          
+          Right[ru.MethodMirror, Throwable]( e )
+        }
+      }
+    }
+  }
+
   object BFactoryEngineScope
          extends AgentKVDBMongoNodeScope[String,String,String,ConcreteBFactHL.BFactHLExpr]
          with UUIDOps
@@ -1107,7 +1207,7 @@ package bfactory {
               }
             }
           spawn {
-            println( "initiating dispatch on " + node )
+            BasicLogService.tweet( "initiating dispatch on " + node )
             node.dispatchDMsgs()
           }
           node
@@ -1454,7 +1554,7 @@ package bfactory {
               }
             }
           spawn {
-            println( "initiating dispatch on " + node )
+            BasicLogService.tweet( "initiating dispatch on " + node )
             node.dispatchDMsgs()
           }
           node
@@ -1464,11 +1564,11 @@ package bfactory {
 
   }
 
-  trait DSLEvaluatorConfiguration {
+  trait BFactoryEvaluatorConfiguration {
     self : EvalConfig =>
       def dslEvaluatorHostName() : String = {
         try {
-          evalConfig().getString( "DSLEvaluatorHost" )
+          evalConfig().getString( "BFactoryEvaluatorHost" )
         }
         catch {
           case e : Throwable => "localhost" 
@@ -1476,7 +1576,7 @@ package bfactory {
       }
     def dslEvaluatorHostPort() : Int = {
       try {
-        evalConfig().getInt( "DSLEvaluatorPort" )
+        evalConfig().getInt( "BFactoryEvaluatorPort" )
       }
       catch {
         case e : Throwable => 5672
@@ -1484,7 +1584,7 @@ package bfactory {
     }
     def dslEvaluatorHostData() : String = {
         try {
-          evalConfig().getString( "DSLEvaluatorHostData" )
+          evalConfig().getString( "BFactoryEvaluatorHostData" )
         }
         catch {
           case e : Throwable => "/bFactoryProtocol" 
@@ -1492,7 +1592,7 @@ package bfactory {
       }
     def dslEvaluatorPreferredSupplierHostName() : String = {
         try {
-          evalConfig().getString( "DSLEvaluatorPreferredSupplierHost" )
+          evalConfig().getString( "BFactoryEvaluatorPreferredSupplierHost" )
         }
         catch {
           case e : Throwable => "localhost" 
@@ -1500,7 +1600,7 @@ package bfactory {
       }
     def dslEvaluatorPreferredSupplierPort() : Int = {
       try {
-        evalConfig().getInt( "DSLEvaluatorPreferredSupplierPort" )
+        evalConfig().getInt( "BFactoryEvaluatorPreferredSupplierPort" )
       }
       catch {
         case e : Throwable => 5672
@@ -1510,7 +1610,7 @@ package bfactory {
       import scala.collection.JavaConverters._
       try {
         val rslt : java.util.List[String] =
-          evalConfig().getStringList( "DSLEvaluatorNetwork" )
+          evalConfig().getStringList( "BFactoryEvaluatorNetwork" )
         rslt.asScala.toList
       }
       catch {
@@ -1542,7 +1642,7 @@ package bfactory {
 
   object BFactoryEngineCtor extends EvalConfig
   with BFactoryCommLinkConfiguration
-  with DSLEvaluatorConfiguration
+  with BFactoryEvaluatorConfiguration
   with Serializable {
     import BFactoryEngineScope._
     import Being._
@@ -1608,7 +1708,7 @@ package bfactory {
       setup( "/bFactoryProtocol", localHost, localPort, remoteHost, remotePort )
     }
 
-    def setupDSLEvaluatorNode[ReqBody <: PersistedKVDBNodeRequest, RspBody <: PersistedKVDBNodeResponse](
+    def setupBFactoryEvaluatorNode[ReqBody <: PersistedKVDBNodeRequest, RspBody <: PersistedKVDBNodeResponse](
       dataLocation : String = dslEvaluatorHostData,
       localHost : String = dslEvaluatorHostName,
       localPort : Int = dslEvaluatorHostPort
@@ -1631,10 +1731,10 @@ package bfactory {
 
     def dslEvaluatorAgent[ReqBody <: PersistedKVDBNodeRequest, RspBody <: PersistedKVDBNodeResponse](
     ): EvalChannel[ReqBody,RspBody] = {
-      setupDSLEvaluatorNode[ReqBody,RspBody]()
+      setupBFactoryEvaluatorNode[ReqBody,RspBody]()
     }
 
-    object StorageLabels extends CnxnString[String,String,String] {
+    object StorageLabels extends CnxnString[String,String,String] with Serializable {
       def instanceStorageLabel(
         majorVersion : String = "0", minorVersion : String = "1"
       )(
@@ -1820,58 +1920,30 @@ package bfactory {
               )
               
               e match {
-                case Some( mTT.Ground( ConcreteBFactHL.WrappedBehaviorIdentifier( behavior ) ) ) => {
-                  val instanceID = UUID.randomUUID
-                  val instanceLabel =
-                    StorageLabels.instanceStorageLabel()( Left[String,String]( instanceID.toString ) )
-                  
+                case Some( mTT.Ground( ConcreteBFactHL.WrappedBehaviorIdentifier( behavior ) ) ) => {                                    
                   try {
-                    val ru = scala.reflect.runtime.universe
-                    val m = ru.runtimeMirror( getClass.getClassLoader )
-                    val clsSym = m.staticClass( behavior )
-                    val cm = m.reflectClass( clsSym )
-                    val clsTyp = clsSym.toType
-                    val ctorDecl = clsTyp.declaration( ru.nme.CONSTRUCTOR )
-                    val ctors = ctorDecl.asTerm.alternatives
-                    ctors match {
-                      case ctor :: rCtors => {
-                        BasicLogService.tweet(
-                          "method: evaluateExpression"
-                          + "\n instantiating instance "
-                          + "\nthis: " + this
-                          + "\nnode: " + node
-                          + "\nexpr: " + expr
-                          + "\nhandler: " + handler
-                          + "\n-----------------------------------------"
-                          + "\nbehaviorDefinitionCnxn: " + agntCnxn
-                          + "\nbehaviorDefinitionLabel: " + bdl
-                          + "\nbehavior: " + behavior
-                          + "\nctor: " + ctor
-                          + "\ncnxns: " + cnxns
-                          + "\nfilters: " + filters
-                        )
-                        try {
-                          val ctorm = cm.reflectConstructor( ctor.asMethod )
-                          val instance = ctorm() //( cnxns, filters )
-                          val instanceM = m.reflect( instance )
-                          val instanceEntryPointS =
-                            clsTyp.declaration(
-                              ru.newTermName( "run" )
-                            ).asMethod
-                          val instanceEntryPointM =
-                            instanceM.reflectMethod( instanceEntryPointS )
-                          
-                          instanceEntryPointM( n, cnxns, filters )
-
-                          try {
-                            n.publish( agntCnxn )(
-                              instanceLabel,
-                              mTT.Ground(
-                                ConcreteBFactHL.WrappedBehaviorInstance(
-                                  instance
-                                )
-                              )
-                            )
+                    BasicLogService.tweet(
+                      "method: evaluateExpression"
+                      + "\n instantiating instance & finding entry point"
+                      + "\nthis: " + this
+                      + "\nnode: " + node
+                      + "\nexpr: " + expr
+                      + "\nhandler: " + handler
+                      + "\n-----------------------------------------"
+                      + "\nbehaviorDefinitionCnxn: " + agntCnxn
+                      + "\nbehaviorDefinitionLabel: " + bdl
+                      + "\nbehavior: " + behavior
+                      + "\ncnxns: " + cnxns
+                      + "\nfilters: " + filters
+                    )
+                    BFactoryMirror.instanceEntryPoint( behavior, "run" ) match {
+                      case Left( entryPointM ) => {
+                        val t = new Thread {
+                          override def run() = {
+                            val instanceID = UUID.randomUUID
+                            val instanceLabel =
+                              StorageLabels.instanceStorageLabel()( Left[String,String]( instanceID.toString ) )
+                            entryPointM( n, cnxns, filters )
                             handler( 
                               Some(
                                 mTT.Ground(
@@ -1882,71 +1954,22 @@ package bfactory {
                                 )
                               )
                             )
-                          } 
-                          catch {
-                            case e : Exception => {
-                              BasicLogService.tweet(
-                                "method: evaluateExpression"
-                                + "\n ---> node.publish caused an exception <--- "
-                                + "\nthis: " + this
-                                + "\nnode: " + node
-                                + "\nexpr: " + expr
-                                + "\nhandler: " + handler
-                                + "\n-----------------------------------------"
-                                + "\nagntCnxn: " + agntCnxn
-                                + "\nlabel: " + instanceLabel
-                                + "\nbehavior: " + behavior
-                              )
-                              BasicLogService.tweetTrace( e )
-                              handler( 
-                                Some(
-                                  mTT.Ground(
-                                    ConcreteBFactHL.InstanceNotRunning(
-                                      bdc,
-                                      bdl,
-                                      "storing instance record failed" + e
-                                    )
-                                  )
-                                )
-                              )
-                            }
                           }
                         }
-                        catch {
-                          case e : Throwable => {
-                            BasicLogService.tweet(
-                              "method: evaluateExpression"
-                              + "\n failed instantiating instance "
-                              + "\nthis: " + this
-                              + "\nnode: " + node
-                              + "\nexpr: " + expr
-                              + "\nhandler: " + handler
-                              + "\n-----------------------------------------"
-                              + "\nbehaviorDefinitionCnxn: " + agntCnxn
-                              + "\nbehaviorDefinitionLabel: " + bdl
-                              + "\nbehavior: " + behavior
-                              + "\nctor: " + ctor
-                              + "\ncnxns: " + cnxns
-                              + "\nfilters: " + filters
-                            )                                
-                            throw new Exception( "ctor invocation failed: " + ctor )
-                          }
-                        }
+                        t.run()
                       }
-                      case _ => {
-                        BasicLogService.tweet(
-                          "method: evaluateExpression"
-                          + "\n failed in attempt to instantiate instance "
-                          + "\nthis: " + this
-                          + "\nnode: " + node
-                          + "\nexpr: " + expr
-                          + "\nhandler: " + handler
-                          + "\n-----------------------------------------"
-                          + "\nbehaviorDefinitionCnxn: " + agntCnxn
-                          + "\nbehaviorDefinitionLabel: " + bdl
-                          + "\nbehavior: " + behavior
+                      case Right( e ) => {
+                        handler( 
+                          Some(
+                            mTT.Ground(
+                              ConcreteBFactHL.InstanceNotRunning(
+                                bdc,
+                                bdl,
+                                "instantiation failed" + e
+                              )
+                            )
+                          )
                         )
-                        throw new Exception( "no ctor alternatives: " + ctors )
                       }
                     }
                   }
@@ -2688,7 +2711,7 @@ package bfactory {
             messageProcessorLoop( erql, node, rspLabelCtor, useBiLink, flip )
           }
           else {
-            println( "warning: derefing node early anyway"  )
+            BasicLogService.tweet( "warning: derefing node early anyway"  )
             messageProcessorLoop( erql, node, rspLabelCtor, useBiLink, flip )
           }
         }
