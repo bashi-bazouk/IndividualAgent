@@ -3,6 +3,7 @@ from os import listdir, path, stat
 import sys
 from git import *
 from iautil import *
+from subtree import *
 
 ## Here are the handlers ##
 
