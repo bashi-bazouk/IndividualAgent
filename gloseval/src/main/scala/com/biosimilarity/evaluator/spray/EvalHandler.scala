@@ -453,7 +453,7 @@ trait EvalHandler {
                                 optRsrc match {
                                   case None => ()
                                   case Some(_) => {
-                                    connectToNodeUser(
+                                    onAgentCreation(
                                       cap,
                                       aliasCnxn,
                                       Unit => {
@@ -481,10 +481,93 @@ trait EvalHandler {
     )
   }
 
-  def connectToNodeUser(
+  // TODO: Replace function below with behavior
+  def listenIntroductionNotification(sessionURIStr: String, aliasCnxn: PortableAgentCnxn): Unit = {
+    import com.biosimilarity.evaluator.distribution.diesel.DieselEngineScope.acT
+    import com.protegra_ati.agentservices.protocols.msgs._
+
+    val introductionNotificationLabel = fromTermString("protocolMessage(introductionNotification(sessionId(_)))").getOrElse(throw new Exception("Couldn't parse introductionNotificationLabel"))
+
+    agentMgr().feed(
+      introductionNotificationLabel,
+      List(aliasCnxn),
+      (optRsrc: Option[mTT.Resource]) => {
+        BasicLogService.tweet("listenIntroductionNotification | onFeed : optRsrc = " + optRsrc)
+        optRsrc match {
+          case None => ()
+          case Some(mTT.RBoundHM(Some(mTT.Ground(Bottom)), _)) => ()
+          case Some(mTT.RBoundHM(Some(mTT.Ground(PostedExpr((PostedExpr(IntroductionNotification(
+            Some(sessionId),
+            correlationId,
+            acT.AgentBiCnxn(_, writeCnxn),
+            message,
+            profileData
+          )), _, _)))), _)) => {
+            CometActorMapper.cometMessage(sessionURIStr, compact(render(
+              ("msgType" -> "introductionNotification") ~
+              ("content" ->
+                ("introSessionId" -> sessionId) ~
+                ("correlationId" -> correlationId) ~
+                ("connection" ->
+                  ("source" -> writeCnxn.src.toString) ~
+                  ("label" -> writeCnxn.label) ~
+                  ("target" -> writeCnxn.trgt.toString)
+                ) ~
+                ("message" -> message.getOrElse("")) ~
+                ("introProfile" -> profileData)
+              )
+            )))
+          }
+        }
+      }
+    )
+  }
+
+  // TODO: Replace function below with behavior
+  def listenConnectNotification(sessionURIStr: String, aliasCnxn: PortableAgentCnxn): Unit = {
+    import com.biosimilarity.evaluator.distribution.diesel.DieselEngineScope.acT
+    import com.protegra_ati.agentservices.protocols.msgs._
+
+    val connectNotificationLabel = fromTermString("protocolMessage(connectNotification(sessionId(_)))").getOrElse(throw new Exception("Couldn't parse connectNotificationLabel"))
+
+    agentMgr().feed(
+      connectNotificationLabel,
+      List(aliasCnxn),
+      (optRsrc: Option[mTT.Resource]) => {
+        BasicLogService.tweet("listenConnectNotification | onFeed : optRsrc = " + optRsrc)
+        optRsrc match {
+          case None => ()
+          case Some(mTT.RBoundHM(Some(mTT.Ground(Bottom)), _)) => ()
+          case Some(mTT.RBoundHM(Some(mTT.Ground(PostedExpr((PostedExpr(ConnectNotification(
+            Some(sessionId),
+            PortableAgentBiCnxn(_, writeCnxn),
+            profileData
+          )), _, _)))), _)) => {
+            CometActorMapper.cometMessage(sessionURIStr, compact(render(
+              ("msgType" -> "connectNotification") ~
+              ("content" ->
+                ("connection" ->
+                  ("source" -> writeCnxn.src.toString) ~
+                  ("label" -> writeCnxn.label) ~
+                  ("target" -> writeCnxn.trgt.toString)
+                ) ~
+                ("introProfile" -> profileData)
+              )
+            )))
+          }
+        }
+      }
+    )
+  }
+
+  def onAgentCreation(
     cap: String,
     aliasCnxn: PortableAgentCnxn,
-    onSuccess: Unit => Unit = Unit => ()): Unit = {
+    onSuccess: Unit => Unit = Unit => ()
+  ): Unit = {
+    
+    import com.biosimilarity.evaluator.distribution.bfactory.BFactoryDefaultServiceContext._
+    import com.biosimilarity.evaluator.distribution.bfactory.BFactoryDefaultServiceContext.eServe._
 
     val aliasURI = new URI("alias://" + cap + "/alias")
     val nodeAgentCap = emailToCap(NodeUser.email)
@@ -493,9 +576,9 @@ trait EvalHandler {
     val nodeUserAliasCnxn = PortableAgentCnxn(nodeAliasURI, "alias", nodeAliasURI)
     val cnxnLabel = UUID.randomUUID().toString
     val nodeToThisCnxn = PortableAgentCnxn(nodeAliasURI, cnxnLabel, aliasURI)
-    val thisToNode = PortableAgentCnxn(aliasURI, cnxnLabel, nodeAliasURI)
-    val biCnxn = PortableAgentBiCnxn(nodeToThisCnxn, thisToNode)
-    val nodeAgentBiCnxn = PortableAgentBiCnxn(thisToNode, nodeToThisCnxn)
+    val thisToNodeCnxn = PortableAgentCnxn(aliasURI, cnxnLabel, nodeAliasURI)
+    val biCnxn = PortableAgentBiCnxn(nodeToThisCnxn, thisToNodeCnxn)
+    val nodeAgentBiCnxn = PortableAgentBiCnxn(thisToNodeCnxn, nodeToThisCnxn)
 
     agentMgr().post(
       biCnxnsListLabel,
@@ -540,6 +623,35 @@ trait EvalHandler {
             )
           }
         }
+      }
+    )
+    
+    // Launching introduction behaviors
+    bFactoryMgr().commenceInstance(
+      introductionInitiatorCnxn,
+      introductionInitiatorLabel,
+      List(aliasCnxn),
+      Nil,
+      {
+        optRsrc => println( "onCommencement one | " + optRsrc )
+      }
+    )
+    bFactoryMgr().commenceInstance(
+      introductionRecipientCnxn,
+      introductionRecipientLabel,
+      List( nodeToThisCnxn, aliasCnxn ),
+      Nil,
+      {
+        optRsrc => println( "onCommencement two | " + optRsrc )
+      }
+    )
+    bFactoryMgr().commenceInstance(
+      introductionRecipientCnxn,
+      introductionRecipientLabel,
+      List( thisToNodeCnxn, nodeUserAliasCnxn ),
+      Nil,
+      {
+        optRsrc => println( "onCommencement three | " + optRsrc )
       }
     )
   }
@@ -654,6 +766,11 @@ trait EvalHandler {
                   case Some(rbnd@mTT.RBoundHM(Some(mTT.Ground(v)), _)) => {
                     v match {
                       case PostedExpr( (PostedExpr(labelList: String), _, _) ) => {
+                        // TODO: Replace notification block below with behavior code
+                        val aliasCnxn = PortableAgentCnxn(capURI, "alias", capURI)
+                        listenIntroductionNotification("agent-session://" + cap, aliasCnxn)
+                        listenConnectNotification("agent-session://" + cap, aliasCnxn)
+
                         val biCnxnListObj = Serializer.deserialize[List[PortableAgentBiCnxn]](biCnxnList)
 
                         val content = 
@@ -940,6 +1057,8 @@ trait EvalHandler {
 
     def Node: Parser[String] = """[A-Za-z0-9]+""".r
 
+    def Empty: Parser[Set[List[Path]]] = """^$""".r ^^ {(s: String) => Set[List[Path]]()}
+
     def Path: Parser[Set[List[Path]]] = "[" ~> repsep(Node, ",") <~ "]" ^^
     {
       // A path is a trivial sum of a trivial product
@@ -972,10 +1091,10 @@ trait EvalHandler {
       }
     }
 
-    def SOP: Parser[Set[List[Path]]] = Path | Product | Sum
+    def SOP: Parser[Set[List[Path]]] = Empty | Path | Product | Sum
     
     def sumOfProductsToFilterSet(sop: Set[List[Path]]): Set[CnxnCtxtLabel[String, String, String]] = {
-      for (prod <- sop) yield {
+      val filterSet = for (prod <- sop) yield {
         // List(List("Greg", "Biosim", "Work"), List("Personal"))
         // => fromTermString("all(vWork(vBiosim(vGreg(_))), vPersonal(_))").get
         fromTermString("all(" + prod.map(path => {
@@ -985,6 +1104,11 @@ trait EvalHandler {
           })
           l + "_" + r        
         }).mkString(",") + ")").get
+      }
+      filterSet.isEmpty match {
+        // Default to the "match everything" filter
+        case true => Set(new CnxnCtxtLeaf[String,String,String](Right("_")))
+        case false => filterSet
       }
     }
 
@@ -1003,7 +1127,7 @@ trait EvalHandler {
 
   // Renders a ccl of the form "all(va('_), vb(vc(vd('_))))"
   // as the kind of json filter we get from the UI
-  def cclToJSON(ccl: CnxnCtxtLabel[String,String,String]): String = {
+  def cclToUI(ccl: CnxnCtxtLabel[String,String,String]): (String, String) = {
     def cclToPath(ccl: CnxnCtxtLabel[String,String,String]): List[String] = {
       ccl match {
         case CnxnCtxtBranch(tag, List(CnxnCtxtLeaf(Right("_")))) => List(tag.substring(1))
@@ -1011,8 +1135,12 @@ trait EvalHandler {
       }
     }
     ccl match {
-      case CnxnCtxtBranch("all", factuals) => {
-        "all(" + factuals.map("[" + cclToPath(_).reverse.mkString(",") + "]").mkString(",") + ")"
+      case CnxnCtxtBranch("all", uid :: factuals) => {
+        val uidStr = uid match {
+          case CnxnCtxtBranch(_, List(CnxnCtxtLeaf(Left(uidStr: String)))) => uidStr
+          case CnxnCtxtBranch(_, List(CnxnCtxtLeaf(Right(uidVar: String)))) => uidVar
+        }
+        (uidStr, "all(" + factuals.map("[" + cclToPath(_).reverse.mkString(",") + "]").mkString(",") + ")")
       }
     }
   }
@@ -1042,7 +1170,7 @@ trait EvalHandler {
             case Some(mTT.RBoundHM(Some(mTT.Ground(PostedExpr(
               (PostedExpr(postedStr: String), filter: CnxnCtxtLabel[String,String,String], cnxn)
             ))), _)) => {
-              val jsonFilter = cclToJSON(filter)
+              val (uid, jsonFilter) = cclToUI(filter)
               val agentCnxn = cnxn.asInstanceOf[act.AgentCnxn]
               val content =
                 ("sessionURI" -> sessionURIStr) ~
@@ -1063,7 +1191,22 @@ trait EvalHandler {
         }
         println("evalSubscribeRequest | feedExpr: calling feed")
         BasicLogService.tweet("evalSubscribeRequest | feedExpr: calling feed")
-        for (filter <- filters) {
+        val uidCCL = (try {
+          fromTermString("vUID(\"" + (ec \ "uid").extract[String] + "\")").get
+        } catch {
+          case _: Throwable => fromTermString("vUID(UID)").get
+        }).asInstanceOf[CnxnCtxtLabel[String,String,String] with Factual]
+        val uidFilters = filters.map((filter) => filter match {
+          case CnxnCtxtBranch(tag, children) => 
+            new CnxnCtxtBranch[String,String,String](
+              tag,
+              uidCCL +: children
+            )
+          case leaf@CnxnCtxtLeaf(Right(_)) => leaf
+        })
+        for (filter <- uidFilters) {
+          println("evalSubscribeRequest | feedExpr: filter = " + filter)
+          BasicLogService.tweet("evalSubscribeRequest | feedExpr: filter = " + filter)
           agentMgr().feed(filter, cnxns, onFeed)
         }
       }
@@ -1076,7 +1219,7 @@ trait EvalHandler {
             case Some(mTT.RBoundHM(Some(mTT.Ground(PostedExpr(
               (PostedExpr(postedStr: String), filter: CnxnCtxtLabel[String,String,String], cnxn)
             ))), _)) => {
-              val jsonFilter = cclToJSON(filter)
+              val (uid, jsonFilter) = cclToUI(filter)
               val agentCnxn = cnxn.asInstanceOf[act.AgentCnxn]
               val content =
                 ("sessionURI" -> sessionURIStr) ~
@@ -1112,16 +1255,39 @@ trait EvalHandler {
           case _ => throw new Exception("Couldn't parse staff: " + json)
         }
         BasicLogService.tweet("evalSubscribeRequest | feedExpr: calling score")
-        for (filter <- filters) {
+        val uidCCL = (try {
+          fromTermString("vUID(\"" + (ec \ "uid").extract[String] + "\")").get
+        } catch {
+          case _: Throwable => fromTermString("vUID(UID)").get
+        }).asInstanceOf[CnxnCtxtLabel[String,String,String] with Factual]
+        val uidFilters = filters.map((filter) => filter match {
+          case CnxnCtxtBranch(tag, children) => 
+            new CnxnCtxtBranch[String,String,String](
+              tag,
+              uidCCL +: children
+            )
+          case leaf@CnxnCtxtLeaf(Right(_)) => leaf
+        })
+        for (filter <- uidFilters) {
           agentMgr().score(filter, cnxns, staff, onScore)
         }
       }
       case "insertContent" => {
         println("evalSubscribeRequest | insertContent")
         BasicLogService.tweet("evalSubscribeRequest | insertContent")
-        val value = (ec \ "value").extract[String]
         BasicLogService.tweet("evalSubscribeRequest | insertContent: calling post")
-        for (filter <- filters) {
+        val value = (ec \ "value").extract[String]
+        val uidCCL = fromTermString("vUID(\"" + (ec \ "uid").extract[String] + "\")").get
+          .asInstanceOf[CnxnCtxtLabel[String,String,String] with Factual]
+        val uidFilters = filters.map((filter) => filter match {
+          case CnxnCtxtBranch(tag, children) => 
+            new CnxnCtxtBranch[String,String,String](
+              tag,
+              uidCCL +: children
+            )
+        })
+        for (filter <- uidFilters) {
+          BasicLogService.tweet("evalSubscribeRequest | insertContent: calling post with filter " + filter)
           agentMgr().post(
             filter,
             cnxns,
@@ -1262,6 +1428,7 @@ trait EvalHandler {
                                           case None => ()
                                           case Some(_) => {
                                             // Store empty bi-cnxn list on alias cnxn
+                                            launchNodeUserBehaviors( aliasCnxn )
                                             agentMgr().post(
                                               biCnxnsListLabel,
                                               List(aliasCnxn),
@@ -1286,6 +1453,22 @@ trait EvalHandler {
           }
           case _ => ()
         }
+      }
+    )
+  }
+
+  def launchNodeUserBehaviors(
+    aliasCnxn : PortableAgentCnxn
+  ) : Unit = {
+    import com.biosimilarity.evaluator.distribution.bfactory.BFactoryDefaultServiceContext._
+    import com.biosimilarity.evaluator.distribution.bfactory.BFactoryDefaultServiceContext.eServe._
+    bFactoryMgr().commenceInstance(
+      introductionInitiatorCnxn,
+      introductionInitiatorLabel,
+      List( aliasCnxn ),
+      Nil,
+      {
+        optRsrc => println( "onCommencement five | " + optRsrc )
       }
     )
   }
