@@ -45,7 +45,7 @@ def pull_subtree(name, sub_branch=None):
   else:
     create_or_update_sub_branch(name, sub_branch)
     command = "git merge --squash -s subtree --no-commit ia_%s_%s"
-    sh(command % (name, name, sub_branch))
+    sh(command % (name, sub_branch))
 
 def push_subtree(name, sub_branch=None):
   print "ia push subtree %s" % name    
