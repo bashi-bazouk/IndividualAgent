@@ -1,9 +1,0 @@
-{
-    "template": "wiki.html",
-    "top": { "prev": "Home", "cur": "Documentation" },
-
-    "contents": {
-        "root": { "link": "/wiki/", "name": "Documentation" },
-        "template": "wiki-post.html"
-    }
-}

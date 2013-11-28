@@ -1,4 +1,4 @@
-.PHONY: clean workbench zmq mongrel2
+.PHONY: clean workbench zmq mongrel2 ubuntu
 
 IA=bin/ia
 
@@ -21,8 +21,21 @@ clean: bin/ia
 	$(IA) remove project gloseval
 	$(IA) remove project agentui
 
+ubuntu:
+	apt-get update
+	apt-get upgrade
+	apt-get install automake
+	apt-get install autoconf
+	apt-get install scala
+	apt-get install python
+	apt-get install python-dev
+	apt-get install python-setuptools
+	apt-get install maven
+	apt-get install sqlite3
+	apt-get install libsqlite3-dev
 
 zmq:
+	easy_install pyzmq
 	$(IA) add project zmq https://github.com/zeromq/libzmq.git
 	$(IA) add subtree zmq
 	cd zmq; ./autogen.sh; ./configure; make; sudo make install
@@ -31,9 +44,6 @@ zmq:
 mongrel2:
 	$(IA) add project mongrel2 https://github.com/bashi-bazouk/mongrel2.git
 	$(IA) add subtree mongrel2
-	cd mongrel2
-	make
-	sudo make install
-	cd ..
+	cd mongrel2; make; sudo make install
 	$(IA) remove subtree mongrel2
 

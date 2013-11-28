@@ -1,8 +1,0 @@
-{
-    "template": "blog.html",
-    "top": { "prev": "Home", "cur": "Blog and Announcements" },
-    "contents": {
-        "template": "blog-post.html",
-        "root": { "link": "/blog/", "name": "Blog" }
-    }
-}
