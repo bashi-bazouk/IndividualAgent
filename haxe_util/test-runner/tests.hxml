@@ -1,6 +1,0 @@
-
--main m3.test.TestRunner
--js runner.js
--debug
--cp ..
--D noEmbedJS
