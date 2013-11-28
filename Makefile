@@ -1,4 +1,4 @@
-.PHONY: clean workbench
+.PHONY: clean workbench zmq mongrel2 ubuntu
 
 IA=bin/ia
 
@@ -8,15 +8,11 @@ workbench: bin/ia
 	$(IA) add project diesel https://github.com/rlamb/Agent-Service-ATI-IA.git
 	$(IA) add project gloseval https://github.com/leithaus/GLoSEval.git
 	$(IA) add project agentui https://github.com/iruffner/agentui.git
-	$(IA) add project zmq https://github.com/zeromq/libzmq.git
-	$(IA) add project mongrel2 https://github.com/bashi-bazouk/mongrel2.git
 	$(IA) add subtree haxe_util
 	$(IA) add subtree specialk
 	$(IA) add subtree diesel cryptoRedo
 	$(IA) add subtree gloseval cryptoRedo
 	$(IA) add subtree agentui
-	$(IA) add subtree zmq
-	$(IA) add subtree mongrel2
 
 clean: bin/ia
 	$(IA) remove project haxe_util
@@ -25,17 +21,29 @@ clean: bin/ia
 	$(IA) remove project gloseval
 	$(IA) remove project agentui
 
+ubuntu:
+	apt-get update
+	apt-get upgrade
+	apt-get install automake
+	apt-get install autoconf
+	apt-get install scala
+	apt-get install python
+	apt-get install python-dev
+	apt-get install python-setuptools
+	apt-get install maven
+	apt-get install sqlite3
+	apt-get install libsqlite3-dev
 
-install:
-	cd zmq
-	./autogen.sh
-	./configure
-	make
-	sudo make install
-	make clean
-	cd ..
-	cd mongrel2
-	make
-	sudo make install
-	make clean
-	cd ..
+zmq:
+	easy_install pyzmq
+	$(IA) add project zmq https://github.com/zeromq/libzmq.git
+	$(IA) add subtree zmq
+	cd zmq; ./autogen.sh; ./configure; make; sudo make install
+	$(IA) remove subtree zmq
+
+mongrel2:
+	$(IA) add project mongrel2 https://github.com/bashi-bazouk/mongrel2.git
+	$(IA) add subtree mongrel2
+	cd mongrel2; make; sudo make install
+	$(IA) remove subtree mongrel2
+
