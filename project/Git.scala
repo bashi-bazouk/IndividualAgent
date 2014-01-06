@@ -15,8 +15,8 @@ object Git {
     Process("git"::"remote"::"add"::"-f"::name::location::Nil) !
   }
 
-  def subtreeAdd(name: String, branch: String) {
-    (s"git subtree add --prefix $name ${name}-upstream/$branch --squash" !)
+  def subtreeAdd(prefix: String, remote: String, branch: String) {
+    (s"git subtree add --prefix $prefix ${remote}/$branch --squash" !)
   }
 
   def remove(name: String) {

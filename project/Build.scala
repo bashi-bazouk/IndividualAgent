@@ -77,66 +77,15 @@ object IABuild extends Build {
       writeConfig("gloseval/eval.conf")
     },
 
-    TaskKey[Unit]("build-local", "Initialize the workbench") := {
+    TaskKey[Unit]("initialize-subprojects", "Initialize the workbench") := {
       val configuration = ConfigFactory.parseFile(new File("application.conf"))
       val projects = configuration.getObject("projects")
 
-      ("rm -r specialk/ gloseval/ diesel/" !)
-
-      for(name <- projects.keySet.asScala) {
-        println("processing name " + name)
-        if(!Path(name).exists || name.equals("diesel") || name.equals("gloseval") || name.equals("specialk")) {
-          println("name doesn't exist")
-
-          var origin: Option[String] = None
-          var upstream: Option[String] = None
-          var branch: Option[String] = None
-          for((k,v) <- projects.get(name).unwrapped.asInstanceOf[java.util.Map[String,String]].asScala) {
-            k.toString match {
-              case "origin" =>
-                origin = Some(v)
-              case "upstream" =>
-                upstream = Some(v)
-              case "branch" =>
-                branch = Some(v)
-              case _ => ;
-            }
-          }
-
-          if(origin.isEmpty) {
-            throw new RuntimeException(s"Project $name must specify an origin.")
-          } else {
-            if(upstream.isEmpty)
-              upstream = origin
-            if(branch.isEmpty)
-              branch = Some("master")
-          }
-
-          def gitignoreProjectFolder(name: String) {
-            for(line <- Source.fromFile(".gitignore").getLines) {
-              if(line.equals(s"/$name/")) {
-                return
-              }
-            }
-            (s"""echo /$name/""" #>> file(".gitignore") !)
-          }
-
-          gitignoreProjectFolder(name)
-
-          Git.remoteAdd(s"${name}-origin", origin.get)
-          Git.remoteAdd(s"${name}-upstream", upstream.get)
-          Git.add("-A")
-          Git.commit(s"clean commit before adding subtree $name.")
-          Git.subtreeAdd(name, branch.get)
-          Git.remove(name)
-          println("done processing " + name)
-        } else {
-          println("name " + name + " already exists")
-        }
+      for(name <- SubProjects.keySet) {
+        SubProjects.get(name).get.init(name)
       }
 
     }
-
   )
 
   // Settings
