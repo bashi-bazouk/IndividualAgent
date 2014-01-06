@@ -1,0 +1,80 @@
+#!/usr/bin/python
+from os import listdir, path, stat
+import sys
+from git import *
+from iautil import *
+from subtree import *
+
+## Here are the handlers ##
+
+def add_project(name, url):
+  print "ia add project %s %s" % (name, url)
+  assert_remote_does_not_exist(name)
+  sh("git remote add -f %s %s" % (name, url))
+
+def remove_project(name):
+  print "ia remove project %s" % (name)
+  assert_remote_exists(name)
+  sh("git remote rm %s" % name)
+  sh("rm -r .git/refs/remotes/%s" % name)
+  for b in sub_branches_of_subtree(name):
+    sh("git branch -D %s" % b)
+  remove_subtree(name)
+
+def add_subtree(name, sub_branch="master"):
+  print "ia add subtree %s %s" % (name, sub_branch)
+  assert_remote_exists(name)
+  assert_clean()
+  # assert_subtree_does_not_exist(name)
+  create_or_update_sub_branch(name, sub_branch)
+  sh("git read-tree --prefix=%s -u ia_%s_%s" % (name, name, sub_branch))
+
+def remove_subtree(name):
+  print "ia remove subtree %s" % name
+  if path.exists(name):
+    sh("rm -r %s" % name)
+    sh("git rm -r %s" % name)
+     
+def pull_subtree(name, sub_branch=None):
+  print "ia pull subtree %s" % name
+  assert_clean()
+  assert_subtree_exists(name)
+  sub_branch = map_sub_branch_of_subtree(name, sub_branch)
+  if sub_branch is None:
+    print "Usage: ia pull subtree %s <sub_branch>" % name
+  else:
+    create_or_update_sub_branch(name, sub_branch)
+    command = "git merge --squash -s subtree --no-commit ia_%s_%s"
+    sh(command % (name, sub_branch))
+
+def push_subtree(name, sub_branch=None):
+  print "ia push subtree %s" % name    
+  assert_clean()
+  assert_subtree_exists(name)
+  sub_branch = map_sub_branch_of_subtree(name, sub_branch)
+  if sub_branch is None:
+    print  "Usage: ia push subtree %s <sub_branch>" % name
+  else:
+    create_or_update_sub_branch(name, sub_branch)
+    sh("git subtree push --prefix %s/ %s %s" % (name, name, sub_branch))
+
+## Here are the handler routes ##
+
+commands = {
+  'add': {
+    'project': add_project,
+    'subtree': add_subtree },
+  'remove': {
+    'project': remove_project,
+    'subtree': remove_subtree },
+  'pull': {
+    'subtree': pull_subtree },
+  'push': {
+    'subtree': push_subtree },
+  'qc': quick_commit
+
+}
+
+## Here is the processor ##
+
+subcommand(commands)

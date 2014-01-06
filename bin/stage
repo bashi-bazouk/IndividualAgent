@@ -1,0 +1,28 @@
+#!/usr/bin/python
+
+from os import listdir, path, stat
+from iautil import *
+from subtree import *
+
+## Here are the handlers ##
+def stage_ui():
+  assert_subtree_exists("haxe_util")
+  assert_subtree_exists("agentui")
+  assert_subtree_exists("mongrel2")
+  sh("ln -s haxe_util/m3 agentui/client/haxe_src/m3")
+  cd("agentui/client")
+  sh("haxe build.hxml")
+  cd("../..")
+  sh("cp -r agentui/client/css iaproxy/www")
+  sh("cp -r agentui/client/js iaproxy/www")
+  sh("cp -r agentui/client/media iaproxy/www")
+  sh("cp agentui/client/agentui.html iaproxy/www/index.html")
+
+
+## Here are the handler routes ##
+commands = {
+  'ui': stage_ui }
+
+## Here is the processor ##
+
+subcommand(commands)
