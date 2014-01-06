@@ -19,6 +19,11 @@ object Git {
     (s"git subtree add --prefix $prefix ${remote}/$branch --squash" !)
   }
 
+  def subtreePull(prefix: String, remote: String, branch: String) {
+    (s"git fetch $remote $branch" !)
+    (s"git subtree pull --prefix $prefix $remote $branch --squash" !)
+  }
+
   def remove(name: String) {
     (s"git rm -r --cached $name" !)
   }

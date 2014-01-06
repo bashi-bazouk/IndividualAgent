@@ -8,9 +8,9 @@ import com.typesafe.config._
 
 import java.io._
 
-class SubProject(val origin: String, val upstream: String, val branch: String) {
+class SubProject(val name: String, val origin: String, val upstream: String, val branch: String) {
 
-  def init(name: String) {
+  def init() {
 
     ("rm -r $name/" !) 
 
@@ -34,9 +34,9 @@ class SubProject(val origin: String, val upstream: String, val branch: String) {
 
   }
 
-  def pullFromOrigin() {}
+  def pullFromOrigin() = Git.subtreePull(name, origin, branch)
 
-  def pullFromUpstream() {}
+  def pullFromUpstream() = Git.subtreePull(name, upstream, branch)
 
   def pushToOrigin() {}
 
@@ -71,7 +71,7 @@ object SubProjects extends Iterable[SubProject] {
         branch = Some("master")
     }
 
-    subProjects.put(name, new SubProject(origin.get, upstream.get, branch.get))
+    subProjects.put(name, new SubProject(name, origin.get, upstream.get, branch.get))
   }
 
   def get(name: String) = subProjects.get(name)

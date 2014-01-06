@@ -81,8 +81,8 @@ object IABuild extends Build {
       val configuration = ConfigFactory.parseFile(new File("application.conf"))
       val projects = configuration.getObject("projects")
 
-      for(name <- SubProjects.keySet) {
-        SubProjects.get(name).get.init(name)
+      for(subProject <- SubProjects) {
+        subProject.init()
       }
 
     }
