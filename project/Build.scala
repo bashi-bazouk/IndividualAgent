@@ -85,6 +85,17 @@ object IABuild extends Build {
         subProject.init()
       }
 
+    },
+
+    InputKey[Unit]("pull") := {
+      val args = spaceDelimited("<subProject> [upstream | origin]").parsed
+
+      args.toList match {
+        case subProject::"upstream"::Nil =>
+          SubProjects.get(subProject).get.pullFromUpstream
+        case subProject::"origin"::Nil =>
+          SubProjects.get(subProject).get.pullFromOrigin
+      }
     }
   )
 
