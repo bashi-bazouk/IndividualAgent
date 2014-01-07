@@ -1099,3 +1099,69 @@ body {
 .ui-tabs-vertical .ui-tabs-nav li.ui-tabs-active { padding-bottom: 0; padding-right: .1em; border-right-width: 1px; border-right-width: 1px; }
 .ui-tabs-vertical .ui-tabs-panel { padding: 1em; float: right; width: 40em;}
 
+
+/* Snap-svg */
+
+#score-comp-svg {
+	border: 1px solid black;
+}
+.zztop {
+	z-index: 1000;
+}
+
+.urlContent {
+	stroke: #00FF00; 
+	stroke-width: 1px;
+	fill: cyan;
+}
+
+.audioEllipse {
+	stroke: wheat;
+	stroke-width: 1px;
+	fill: tomato;
+}
+
+.audioTriangle {
+	stroke: green;
+	stroke-width: 1px;
+	fill: red;
+	stroke-opacity: 0.6;
+	fill-opacity: 0.6;
+}
+
+.messageContent, .messageContentLarge {
+	stroke: #00FF00;
+	fill: orange;
+}
+
+.messageContent {
+	stroke-width: 1px;
+}
+
+.messageContentLarge {
+	stroke-width: 5px;
+}
+
+.messageContent-small-text {
+	color:#ff00ff;
+	font-size:6px;
+}
+
+.messageContent-large-text {
+	color: #000000;
+	font-size: 12px;
+	text-align: left;
+	padding: 7px;
+}
+
+.contentLine {
+	stroke-opacity: 0.6;
+	stroke: #cccccc;
+	stroke-width: 1;
+}
+
+.contentRect {
+	fill: none; 
+	stroke: #bada55; 
+	stroke-width: 1;
+}
