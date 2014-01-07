@@ -20,7 +20,9 @@ object Git {
   }
 
   def subtreePull(prefix: String, remote: String, branch: String) {
+    println(s"git fetch $remote $branch")
     (s"git fetch $remote $branch" !)
+    println(s"git subtree pull --prefix $prefix $remote $branch --squash")
     (s"git subtree pull --prefix $prefix $remote $branch --squash" !)
   }
 

@@ -33,9 +33,15 @@ class SubProject(val name: String, val origin: String, val upstream: String, val
 
   }
 
-  def pullFromOrigin() = Git.subtreePull(name, origin, branch)
+  def pullFromOrigin() {
+    println(s"$name-origin")
+    Git.subtreePull(name, s"$name-origin", branch)
+  }
 
-  def pullFromUpstream() = Git.subtreePull(name, upstream, branch)
+  def pullFromUpstream() {
+    println(s"$name-upstream")
+    Git.subtreePull(name, s"$name-upstream", branch)
+  }
 
   def pushToOrigin() {}
 
