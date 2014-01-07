@@ -14,6 +14,8 @@ The IA workbench is designed for making full-stack contributions to the Individu
 
 *  `sbt "start client"` - Start the client.
 
+*  `sbt configure` - Configure the DSLCommLinkHost connections.
+
 *  `sbt "pull <subProject> [origin | upstream]"` - Pull in sub-project changes from the upstream or origin repositories (see Application.conf).
 
 *  `sbt "push <subProject>"` - Push sub-project changes to origin.
@@ -48,6 +50,6 @@ The only thing you have to do to take ownership of the IA Workbench takes place 
 
 
 ###TODO
-*  Automatically open pull requests from subproject branch to subproject repository.
+*  Automatically open pull requests from origin to upstream repositories.
 
 *  Make a front-page for the project.
