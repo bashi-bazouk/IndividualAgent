@@ -95,8 +95,22 @@ object IABuild extends Build {
           SubProjects.get(subProject).get.pullFromUpstream
         case subProject::"origin"::Nil =>
           SubProjects.get(subProject).get.pullFromOrigin
+        case _ =>
+          println("Usage: sbt pull <subProject> [upstream | origin]")
+      }
+    },
+
+    InputKey[Unit]("push") := {
+      val args = spaceDelimited("<subProject>").parsed
+
+      args.toList match {
+        case subProject::Nil =>
+          SubProjects.get(subProject).get.pushToOrigin
+        case _ => 
+          println("Usage: sbt push <subProject>")
       }
     }
+
   )
 
   // Settings
