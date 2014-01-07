@@ -6,8 +6,4 @@ project/boot/
 .*
 \#*
 *~
-/gloseval/
-/specialk/
-/haxe/
-/agentui/
-/diesel/
+
