@@ -12,7 +12,7 @@ class SubProject(val name: String, val origin: String, val upstream: String, val
 
   def init() {
 
-    ("rm -r $name/" !) 
+    (s"rm -r $name/" !) 
 
     def gitignoreProjectFolder(name: String) {
       for(line <- Source.fromFile(".gitignore").getLines) {
