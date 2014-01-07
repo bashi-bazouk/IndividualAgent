@@ -30,7 +30,6 @@ class SubProject(val name: String, val origin: String, val upstream: String, val
     Git.add("-A")
     Git.commit(s"clean commit before adding subtree $name.")
     Git.subtreeAdd(name, s"${name}-origin", branch)
-    Git.remove(name)
 
   }
 
