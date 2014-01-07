@@ -11,7 +11,7 @@ It is recommended to add the `bin` folder to your `PATH` when working with IAW.
 
 *  `sbt "pull <subProject> [origin | upstream]"` - pull in sub-project changes from the upstream or origin repositories (see Application.conf)
 
-*  `sbt "push <subProject>" - push sub-project changes to origin
+*  `sbt "push <subProject>"` - push sub-project changes to origin
 
 ### Sub-Project Dependencies
 *  Maven
