@@ -143,16 +143,8 @@ extern class Snap {
 	public function rect(x:Float, y:Float, width:Float, height:Float, ?rx:Float, ?ry:Float):SnapElement;
 	public function text(x:Float, y:Float, text:Dynamic):SnapElement;
 
-	public function append(el:SnapElement):SnapElement;
 	public function toString():String;
 
-
-	// Font
-	public function getFont(family:String, ?weight:String, ?style:String, ?stretch:String):Dynamic;
-	public function print(x:Float, y:Float, text:String, font:Dynamic, font_size:Float):SnapSet;
-	
-	
-	// Color
 	static public function getRGB(color:String):SnapRGB;
 	static public function getColor(?val:Float):String;
 	inline static public function getColorReset():Void {
@@ -232,10 +224,11 @@ extern class SnapFragment {
 
 extern class SnapElement {
 	public function new();
+	public function add(el:SnapElement):SnapElement;
 	public function after(el:SnapElement):SnapElement;
 	public function animate(newAttrs:Dynamic, duration:Float, ?easing:String, ?callbackFunction:Dynamic):SnapElement;
 	public function append(el:SnapElement):SnapElement;
-	public function asPx(attr:String, ?value:String):String;
+	public function asPX(attr:String, ?value:String):String;
 	public function attr(?p0:Dynamic, ?p1:Dynamic):Dynamic;
 	public function before(el:SnapElement):SnapElement;
 	public function click(handler:Event->Void):SnapElement;
@@ -244,7 +237,7 @@ extern class SnapElement {
 	public function drag(?onmove:Event->Void, ?onstart:Event->Void, ?onend:Event->Void,
 		                 ?mcontext:Dynamic, ?scontext:Dynamic, ?econtext:Dynamic):Void;
 	public function dblclick(handler:Event->Void):SnapElement;
-	public function getBBox(): Dynamic;
+	public function getBBox(?isWithoutTransform:Bool): Dynamic;
 	public function getPointAtLength(length:Float): {x:Float, y:Float, alpha:Float};
 	public function getSubpath(from:Float, to:Float):String;
 	public function getTotalLength():Float;
@@ -263,9 +256,9 @@ extern class SnapElement {
 	public function pattern(x:Float, y:Float, width:Float, height:Float):SnapElement;
 	public function prepend(el:SnapElement):SnapElement;
 	public function remove():SnapElement;
-	public function removeDate(?key:String):SnapElement;
+	public function removeData(?key:String):SnapElement;
 	public function select(query:String):Dynamic;
-	public function selectAll(query:String):Dynamic;
+	public function selectAll(query:String):SnapSet;
 	public function stop():SnapElement;
 	public function toDefs():SnapElement;
 	public function toString():StringBuf;
