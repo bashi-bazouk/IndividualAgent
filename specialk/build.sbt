@@ -1,6 +1,6 @@
 checksums := Nil
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 organization := "com.biosimilarity.lift"
 
@@ -81,3 +81,10 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "jline" % "2.10.2",
   "org.scala-lang" % "scala-reflect" % "2.10.2"
 )
+
+autoCompilerPlugins := true
+
+libraryDependencies +=
+    compilerPlugin("org.scala-lang.plugins" % "continuations" % scalaVersion.value)
+
+scalacOptions += "-P:continuations:enable"

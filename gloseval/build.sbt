@@ -1,6 +1,6 @@
 checksums := Nil
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 organization := "com.biosimilarity"
 
@@ -38,3 +38,10 @@ libraryDependencies ++= Seq(
   "org.basex" % "basex-api" % "7.5",
   "biz.source_code" % "base64coder" % "2010-09-21",
   "org.apache.commons" % "commons-email" % "1.3.1")
+
+autoCompilerPlugins := true
+ 
+libraryDependencies +=
+    compilerPlugin("org.scala-lang.plugins" % "continuations" % scalaVersion.value)
+ 
+scalacOptions += "-P:continuations:enable"

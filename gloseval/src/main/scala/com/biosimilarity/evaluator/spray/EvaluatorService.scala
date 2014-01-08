@@ -291,6 +291,7 @@ trait EvaluatorService extends HttpService
       }
     } ~
     pathPrefix("static" / PathElement) { path =>
+      println("In static path prefix handler")
       getFromFile(path)
     }
 }

@@ -1,6 +1,6 @@
 checksums := Nil
 
-scalaVersion := "2.10.2"
+scalaVersion := "2.10.3"
 
 organization := "com.protegra-ati"
 
@@ -41,7 +41,7 @@ libraryDependencies ++= Seq(
   "jlex" % "JLex-local" % "local",
   "cup" % "java-cup-11a" % "local",
   "cup" % "java-cup-11a-runtime" % "local",
-  "com.rabbitmq" % "amqp-client" % "2.6.1",
+  "com.rabbitmq" % "amqp-client" % "3.2.2",
   "org.codehaus.jettison" % "jettison" % "1.3.3",
   "org.scalaxb" % "scalaxb" % "local-update",
   "org.scalesxml" % "scales-xml_2.10" % "0.4.5",
@@ -49,3 +49,10 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.8.1",
   "org.specs2" % "specs2_2.10" % "1.12.3",
   "org.scalatest" % "scalatest_2.10" % "2.0.M5b")
+
+autoCompilerPlugins := true
+
+libraryDependencies +=
+    compilerPlugin("org.scala-lang.plugins" % "continuations" % scalaVersion.value)
+
+scalacOptions += "-P:continuations:enable"

@@ -17,33 +17,24 @@ object IABuild extends Build {
   lazy val diesel = Project(id = "diesel", base = file("diesel")) dependsOn(specialk)
   lazy val gloseval = Project(id = "gloseval", base = file("gloseval")) dependsOn(diesel)
 
-  // Simple Commands
-  val startMongoDB = "pgrep mongod" #|| "mongod"
-  val startRabbitMQ = "pgrep epmd" #|| "rabbitmq-server"
-
   // Tasks
   val tasks = Seq(
 
     InputKey[Unit]("start") := {
-      val args = spaceDelimited("""[rabbit | mongo | server | client]"""").parsed
+      val args = spaceDelimited("""[server | client]"""").parsed
 
       def startDiesel() {
         println("Starting server.")
-        (startMongoDB ### startRabbitMQ).run;
-        "sbt diesel/run" ! }
+        ("sbt diesel/run" !) }
 
       args.toList match {
-        case "rabbit"::Nil =>
-	  startRabbitMQ.run
-	case "mongo"::Nil =>
-	  startMongoDB.run
         case "client"::Nil =>
           println("Starting client.")
           "sbt gloseval/run" !
         case "server"::Nil =>
           startDiesel
         case _ =>
-          println("""Type: sbt "start [rabbit | mongo | server | client]"""")
+          println("""Type: sbt "start [server | client]"""")
           startDiesel
       }
     },
@@ -73,8 +64,7 @@ object IABuild extends Build {
 	writer.close()
       }
 
-      writeConfig("diesel/eval.conf")
-      writeConfig("gloseval/eval.conf")
+      writeConfig("eval.conf")
     },
 
     TaskKey[Unit]("initialize-subprojects", "Initialize the workbench") := {
